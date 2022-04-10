@@ -4,6 +4,7 @@ import http from 'http';
 import cors from 'cors';
 import { Server, Socket } from 'socket.io';
 import registerSessionHandler from './listeners/sessionHandler';
+import registerPlayerHanlder from './listeners/playerHandler';
 
 const app = express();
 app.use(cors({origin: "*"}));
@@ -17,17 +18,9 @@ server.listen(port, () => {
 });
 
 const onConnection = (socket: Socket) => {
+    console.log("Established connection with", socket.id);
     registerSessionHandler(io, socket);
+    registerPlayerHanlder(io, socket);
 }
 
 io.on('connection', onConnection);
-// io.on('connection', (socket) => {
-//     console.log(socket.id);
-
-//     socket.on('join', (data) => {
-//         console.log(data.sessionId);
-//         console.log(data.userId);
-
-//         socket.emit('sessions', [1,2,3]);
-//     })
-// })
