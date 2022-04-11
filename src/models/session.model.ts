@@ -31,4 +31,8 @@ export default class Session {
     public addPlayer(player: Player) {
         this.players.push(player);
     }
+
+    public removePlayer(playerRemove: Player) {
+        this.players = this.players.filter((player) => player !== playerRemove);
+    }
 }

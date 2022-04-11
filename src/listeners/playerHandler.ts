@@ -1,24 +1,30 @@
 import Player from "../models/player.model"
-import { activePlayers, activeSessions } from './../data/index';
+import { addPlayer, addPlayerToSession,removePlayerFromSession, removePlayerById, getSessionById } from "../services/dataService";
 export default (io: any, socket: any) => {
     const createPlayer = ({name}: {name: string}) => {
-        const player = new Player(name);
-        activePlayers.push(player);
+        const player = new Player(name, socket.id as string);
+        addPlayer(player);
         socket.emit('player:created', player);
-        console.log(activePlayers);
     }
-    const joinSession = ({sessionId, playerId} : {sessionId: string, playerId: string}) => {
-        const session = activeSessions.find((session) => session.id === sessionId);
-        const player = activePlayers.find((player) => player.id === playerId);
-        if (session && player) {
-            session.addPlayer(player);
-        }
-        console.log(activeSessions);
+    const joinSession = ({sessionId, playerId} : {sessionId: string, playerId: string}) => { 
+        addPlayerToSession(sessionId, playerId);
+        const session = getSessionById(sessionId);
         setInterval(() => {
             socket.emit("session:status", session);
         }, 1000);
     }
 
+    const disconnectPlayer = () => {
+        removePlayerById(socket.id);
+    }
+
+    const disconnectSession = ({sessionId}: {sessionId: string}) => {
+        removePlayerFromSession(socket.id, sessionId);
+    }
+
     socket.on('player:create', createPlayer);
-    socket.on('player:join', joinSession)
+    socket.on('player:join', joinSession);
+    socket.on('player:disconnect', disconnectSession);
+
+    socket.on('disconnect', disconnectPlayer)
 }

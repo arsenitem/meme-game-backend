@@ -1,10 +1,16 @@
-const { v4: uuidv4 } = require('uuid')
+import Session from "./session.model";
+
 export default class Player {
     id: string;
     name: string;
-
-    constructor(name: string) {
-        this.id = uuidv4();
+    currentSessionId: string;
+    constructor(name: string, id: string) {
+        this.id = id;
         this.name = name;
+        this.currentSessionId = '';
+    }
+
+    public updateSessionId(id: string) {
+        this.currentSessionId = id;
     }
 }

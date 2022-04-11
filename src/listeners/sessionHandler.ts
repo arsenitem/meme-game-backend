@@ -1,19 +1,18 @@
 import Session from "../models/session.model";
-import Player from "../models/player.model";
-import { activeSessions, activePlayers } from './../data/index';
+import data from './../data/index';
+import {addSession, getPlayerById} from '../services/dataService';
 export default (io: any, socket: any) => {
-    const createSession = ({name, hostId, maxPlayers}: {name: string, hostId: string, maxPlayers: number}) => {
-        const host =  activePlayers.find((player) => player.id === hostId);
+    const createSession = ({name}: {name: string}) => {
+        const host = getPlayerById(socket.id)
         if (host) {
-            const session = new Session(name, host, maxPlayers);
-            activeSessions.push(session);
-            console.log(activeSessions);
+            const session = new Session(name, host);
+            addSession(session);
         }
     }
 
     const getSessionList = () => {
         setInterval(() => {
-            socket.emit("session:list", activeSessions);
+            socket.emit("session:list", data.activeSessions);
         }, 1000);
     }
     socket.on('session:create', createSession);
