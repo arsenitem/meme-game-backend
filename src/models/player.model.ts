@@ -1,5 +1,3 @@
-import Session from "./session.model";
-
 export default class Player {
     id: string;
     name: string;
