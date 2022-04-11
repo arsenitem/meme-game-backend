@@ -15,6 +15,12 @@ export default (io: any, socket: any) => {
             socket.emit("session:list", data.activeSessions);
         }, 1000);
     }
+
+    const sessionStart = () => {
+        
+    }
     socket.on('session:create', createSession);
     socket.on('session:getList', getSessionList);
+
+    socket.on('session:start', sessionStart);
 }

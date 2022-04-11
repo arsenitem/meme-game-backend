@@ -1,6 +1,7 @@
 import Player from "../models/player.model";
 import Session from "../models/session.model";
 import data from './../data/index';
+import fs from "fs"
 
 const getSessionById = (id: string) => {
     return data.activeSessions.find((session) => session.id === id);
@@ -38,6 +39,15 @@ const removePlayerById = (playerId: string) => {
         removePlayerFromSession(playerId, player.currentSessionId);
     }
 }
+const getQuestions = () => {
+    try {
+        const questions = fs.readFileSync('./src/data/questions.txt', 'utf8');
+        return questions.split('\n');
+    } catch(err) {
+        console.log(err);
+        return [];
+    };
+}
 export {
     getSessionById,
     addSession,
@@ -45,5 +55,6 @@ export {
     addPlayerToSession,
     removePlayerFromSession,
     getPlayerById,
-    removePlayerById
+    removePlayerById,
+    getQuestions
 }
