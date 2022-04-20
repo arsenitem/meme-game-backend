@@ -5,16 +5,20 @@ import cors from 'cors';
 import { Server, Socket } from 'socket.io';
 import registerSessionHandler from './listeners/sessionHandler';
 import registerPlayerHanlder from './listeners/playerHandler';
+import { setupMemes } from './services/dataService';
+
+setupMemes();
 
 const app = express();
+
 app.use(cors({origin: "*"}));
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } })
+const io = new Server(server, { cors: { origin: '*' } });
 const port = 3000;
 
 server.listen(port, () => {
-    console.log(`App started at port ${port}`)
+    console.log(`App started at port ${port}`);
 });
 
 const onConnection = (socket: Socket) => {

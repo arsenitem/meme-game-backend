@@ -20,6 +20,7 @@ export default (io: any, socket: any) => {
 
     const sessionStart = ({sessionId}: {sessionId: string}) => {
         const session = getSessionById(sessionId);
+        session?.start();
         setInterval(() => {
             session?.players.forEach((player) => {
                 io.sockets.sockets.get(player.id).emit("session:status", session);

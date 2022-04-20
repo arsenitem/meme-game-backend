@@ -1,5 +1,6 @@
 import Player from './player.model';
-import {getQuestions} from '../services/dataService';
+import Meme from './meme.model';
+import {getQuestions, getMemes} from '../services/dataService';
 import { v4 as uuidv4 } from 'uuid';
 export default class Session {
     id: string;
@@ -18,7 +19,9 @@ export default class Session {
     game: {
         activeQuestion: string;
         round: number,
-        cardsList: Array<string>;
+        cardsList: Array<Meme>;
+        roundCards: Array<Meme>;
+        playedCardsList: Array<Meme>;
         questionsList: Array<string>;
     }
 
@@ -37,7 +40,9 @@ export default class Session {
         this.game = {
            activeQuestion: '',
            round: 0,
+           roundCards: [],
            cardsList: [],
+           playedCardsList: [],
            questionsList: getQuestions(),
         }
     }
@@ -49,8 +54,12 @@ export default class Session {
     public removePlayer(playerRemove: Player) {
         this.players = this.players.filter((player) => player !== playerRemove);
     }
-
+    public moveRoundCardsToPlayed() {
+        this.game.playedCardsList.push(...this.game.roundCards);
+    }
     public start() {
+        this.game.round = 1;
+
         //инкремент номера раунда
         //раздать карты удалив из колоды
         //запустить вопрос удалив из колоды
