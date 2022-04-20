@@ -3,6 +3,7 @@ import Session from "../models/session.model";
 import data from './../data/index';
 import fs from "fs"
 import Meme from "../models/meme.model";
+import Question from "../models/question.model";
 
 const getSessionById = (id: string) => {
     return data.activeSessions.find((session) => session.id === id);
@@ -40,17 +41,31 @@ const removePlayerById = (playerId: string) => {
         removePlayerFromSession(playerId, player.currentSessionId);
     }
 }
-const getQuestions = () => {
+const getRandomArray = (array: Array<any>, slice: number) => {
+    array = array.sort(() => 0.5 - Math.random());
+    array = array.slice(0, slice);
+    return array
+}
+const getQuestions = (maxRounds: number) => {
     try {
         const questions = fs.readFileSync('./src/data/questions.txt', 'utf8');
-        return questions.split('\n');
+        let questionTextList = questions.split('\n')
+        let questionList = Array<Question>();
+        questionTextList = getRandomArray(questionTextList, maxRounds);
+        questionTextList.forEach((text) => {            
+               const question = new Question(text);              
+               questionList.push(question);
+        });
+        return questionList;
     } catch(err) {
         console.log(err);
         return [];
     };
 }
-const getMemes = () => {
-    return data.cards;
+const getMemes = (numPlayers: number, deckSize: number, maxRounds: number) => {
+    const numOfCards = numPlayers * deckSize + numPlayers * maxRounds;
+    const memeList = getRandomArray(data.cards, numOfCards);
+    return memeList;
 }
 const setupMemes = () => {
     try {

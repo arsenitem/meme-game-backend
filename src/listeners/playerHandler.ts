@@ -5,6 +5,7 @@ export default (io: any, socket: any) => {
         const player = new Player(name, socket.id as string);
         addPlayer(player);
         socket.emit('player:created', player);
+        console.log('Player created: ', player, name);
     }
     const joinSession = ({sessionId} : {sessionId: string}) => { 
         addPlayerToSession(socket.id, sessionId);
@@ -12,6 +13,7 @@ export default (io: any, socket: any) => {
         setInterval(() => {
             socket.emit("session:status", session);
         }, 1000);
+        console.log("player joined session: ", sessionId);
     }
 
     const disconnectPlayer = () => {

@@ -9,6 +9,7 @@ export default (io: any, socket: any) => {
             addSession(session);
             addPlayerToSession(socket.id, session.id);
             socket.emit("session:created", session);
+            console.log('Session created: ', session, name);
         }
     }
 
