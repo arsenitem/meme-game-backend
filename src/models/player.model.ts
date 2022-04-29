@@ -5,12 +5,12 @@ export default class Player {
     name: string;
     currentSessionId: string;
     score: number;
-    cards: Array<Meme>;
+    private _cards: Array<Meme>;
     constructor(name: string, id: string) {
         this.id = id;
         this.name = name;
         this.score = 0;
-        this.cards = [];
+        this._cards = [];
         this.currentSessionId = '';
     }
 
@@ -19,6 +19,6 @@ export default class Player {
     }
 
     public updateCards(cards: Array<Meme>) {
-        this.cards = cards;
+        this._cards = cards;
     }
 }

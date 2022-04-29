@@ -15,6 +15,7 @@ export default (io: any, socket: any) => {
     }
 
     const disconnectPlayer = () => {
+        console.log(socket.id, 'disconnected');
         removePlayerById(socket.id);
     }
 

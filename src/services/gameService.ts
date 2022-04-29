@@ -1,9 +1,15 @@
 import Session from "../models/session.model";
+import { getSessionById } from "./dataService";
 
-const startSession = (session: Session) => {
+const startSession = (sessionId: string) => {
+    const session = getSessionById(sessionId);
+    console.log(session);
     //shuffle cards
-    session.dealCards();
-    session.incrementRound();
-    session.provideRoundQuesion();
-
+    if (session) {
+        session.dealCards();
+        session.incrementRound();
+        session.provideRoundQuesion();
+    }
 }
+
+export default startSession;

@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 export default class Meme {
     id: string;
-    blob: Buffer;
+    link: string;
 
-    constructor(blob: Buffer) {
-        this.id = uuidv4();
-        this.blob = blob;
+    constructor(id: string = uuidv4(), link: string) {
+        this.id = id;
+        this.link = link;
     }
 }
