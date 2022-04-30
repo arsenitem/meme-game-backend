@@ -3,7 +3,8 @@ import {addSession, getPlayerById, addPlayerToSession, getSessionById, getActive
 import Game from "../models/game.model";
 import Settings from "../models/settings.model";
 import startSession from "../services/gameService";
-export default (io: any, socket: any) => {
+import { Server } from "socket.io";
+export default (io: Server, socket: any) => {
     const createSession = ({name}: {name: string}) => {
         const host = getPlayerById(socket.id)
         if (host) {
@@ -12,11 +13,9 @@ export default (io: any, socket: any) => {
             const session = new Session(name, host, settings, game);
             addSession(session);
             addPlayerToSession(socket.id, session.id);
+            socket.join(session.id);
             socket.emit("session:created", session);
-            console.log('created session, updating list')
-            console.log(getActiveSession());
             socket.broadcast.emit("session:list", getActiveSession());
-            console.log('sended session:list')
         }
     }
 
@@ -25,18 +24,15 @@ export default (io: any, socket: any) => {
     }
 
     const sessionStart = ({sessionId}: {sessionId: string}) => {
-        startSession(sessionId);
-        socket.emit("session:list", getActiveSession());
+        startSession(io, sessionId);
+        io.to(sessionId).emit('session:started');
     }
 
     const getSessionStatus = ({sessionId}: {sessionId: string}) => {
         const session = getSessionById(sessionId);
-        session?.players.forEach((player) => {
-            const playerSocket = io.sockets.sockets.get(player.id);
-            if (playerSocket) {
-                playerSocket.emit("session:status", session);
-            }
-        });
+        console.log(session);
+        console.log(io.to(sessionId));
+        io.to(sessionId).emit('session:status', session);
     }
     socket.on('session:create', createSession);
     socket.on('session:getList', getSessionList);

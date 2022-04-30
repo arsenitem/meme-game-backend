@@ -1,14 +1,18 @@
+import SessionEventEmitter from "../emiters/sessionEventEmiter";
 import Session from "../models/session.model";
 import { getSessionById } from "./dataService";
-
-const startSession = (sessionId: string) => {
+import { Server } from "socket.io";
+const startSession = (io: Server, sessionId: string) => {
     const session = getSessionById(sessionId);
-    console.log(session);
-    //shuffle cards
+    const emitter = new SessionEventEmitter(io);
     if (session) {
+        session.shuffleCards();
         session.dealCards();
         session.incrementRound();
         session.provideRoundQuesion();
+        setInterval(() => {
+            emitter.emitSessionUpdate(session);
+        }, 1000) 
     }
 }
 

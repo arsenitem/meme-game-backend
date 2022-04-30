@@ -8,10 +8,11 @@ export default (io: any, socket: any) => {
     }
     const joinSession = ({sessionId} : {sessionId: string}) => { 
         addPlayerToSession(socket.id, sessionId);
-        const session = getSessionById(sessionId);
-        setInterval(() => {
-            socket.emit("session:status", session);
-        }, 1000);
+        socket.join(sessionId);
+    }
+    const leaveSession = ({sessionId} : {sessionId: string}) => {
+        removePlayerFromSession(socket.id, sessionId);
+        socket.leave(sessionId);
     }
 
     const disconnectPlayer = () => {
@@ -25,6 +26,7 @@ export default (io: any, socket: any) => {
 
     socket.on('player:create', createPlayer);
     socket.on('player:join', joinSession);
+    socket.on('player:leave', leaveSession);
     socket.on('player:disconnect', disconnectSession);
 
     socket.on('disconnect', disconnectPlayer)

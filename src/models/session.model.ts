@@ -46,7 +46,15 @@ export default class Session {
     public provideRoundQuesion() {
         this.game.activeQuestion = this.game.questionsList.pop() || null;
     }
+
+    public shuffleCards() {
+        //TODO Edit sorting algorithm
+        this.game.questionsList = this.game.questionsList.sort(() => 0.5 - Math.random());
+        this.game.cardsList = this.game.cardsList.sort(() => 0.5 - Math.random());
+    }
     public start() {
+        //перемешать карты вопросов
+        //перемешать карты мемов
         //инкремент номера раунда
         //раздать карты удалив из колоды
         //запустить вопрос удалив из колоды
