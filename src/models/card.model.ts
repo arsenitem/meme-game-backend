@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-export default class Meme {
+export default class Card {
     id: string;
     link: string;
 

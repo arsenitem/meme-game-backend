@@ -1,12 +1,13 @@
-import Meme from "./meme.model";
+import Card from "./card.model";
 import Question from "./question.model";
-import { getMemes, getQuestions } from "../services/dataService";
+import { getCards, getQuestions } from "../services/dataService";
+import RoundCard from "./roundCard.model";
 export default class Game {
     activeQuestion: Question | null;
     round: number;
-    roundCards: Array<Meme>;
-    cardsList: Array<Meme>;
-    playedCardsList: Array<Meme>;
+    roundCards: Array<RoundCard>;
+    cardsList: Array<Card>;
+    playedCardsList: Array<RoundCard>;
     questionsList: Array<Question>;
 
     constructor() {
@@ -14,7 +15,7 @@ export default class Game {
         this.round = 0;
         this.roundCards = [];
         this.playedCardsList = [];
-        this.cardsList = getMemes();
+        this.cardsList = getCards();
         this.questionsList = getQuestions();
     }
 }

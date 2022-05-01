@@ -2,10 +2,10 @@ import Player from "../models/player.model";
 import Session from "../models/session.model";
 import data from './../data/index';
 import fs from "fs"
-import Meme from "../models/meme.model";
 import 'dotenv/config';
 import axios, { AxiosError, AxiosResponse } from "axios";
 import Question from "../models/question.model";
+import Card from "../models/card.model";
 
 const getSessionById = (id: string) => {
     return data.activeSessions.find((session) => session.id === id);
@@ -47,14 +47,14 @@ const removePlayerById = (playerId: string) => {
 const getQuestions = () => {
     return data.questions;
 }
-const getMemes = () => {
+const getCards = () => {
     return data.cards;
 }
 const setupData = () => {
     axios.get(`${process.env.FILE_SERVICE_URL}/file/list?links=true`).then((response: AxiosResponse) => {
-        response.data.forEach((memeItem: {id: string, link: string}) => {
-            const meme = new Meme(memeItem.id, memeItem.link)
-            data.cards.push(meme);
+        response.data.forEach((CardItem: {id: string, link: string}) => {
+            const card = new Card(CardItem.id, CardItem.link)
+            data.cards.push(card);
         });
     }).catch((err: AxiosError) => {
         console.log(err.message);
@@ -86,6 +86,6 @@ export {
     removePlayerById,
     getQuestions,
     setupData,
-    getMemes,
+    getCards,
     getActiveSession,
 }

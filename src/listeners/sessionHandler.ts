@@ -34,9 +34,23 @@ export default (io: Server, socket: any) => {
         console.log(io.to(sessionId));
         io.to(sessionId).emit('session:status', session);
     }
+
+    const sessionPickCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
+        const session = getSessionById(sessionId);
+        session?.pickCard(socket.id, cardId);
+        io.to(sessionId).emit('session:updated', session);
+    }
+
+    const sessionVoteCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
+        const session = getSessionById(sessionId);
+        session?.voteCard(cardId);
+        io.to(sessionId).emit('session:updated', session);
+    }
     socket.on('session:create', createSession);
     socket.on('session:getList', getSessionList);
     socket.on('session:getStatus', getSessionStatus);
 
     socket.on('session:start', sessionStart);
+    socket.on('session:pickCard', sessionPickCard);
+    socket.on('session:voteCard', sessionVoteCard);
 }
