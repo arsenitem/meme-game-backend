@@ -4,6 +4,7 @@ import Game from "../models/game.model";
 import Settings from "../models/settings.model";
 import startSession from "../services/gameService";
 import { Server } from "socket.io";
+import { addProxySet } from "../utils/proxy";
 export default (io: Server, socket: any) => {
     const createSession = ({name}: {name: string}) => {
         const host = getPlayerById(socket.id)
@@ -25,26 +26,26 @@ export default (io: Server, socket: any) => {
 
     const sessionStart = ({sessionId}: {sessionId: string}) => {
         startSession(io, sessionId);
-        io.to(sessionId).emit('session:started');
+        io.to(sessionId).emit('session:started');        
     }
 
     const getSessionStatus = ({sessionId}: {sessionId: string}) => {
         const session = getSessionById(sessionId);
-        console.log(session);
-        console.log(io.to(sessionId));
         io.to(sessionId).emit('session:status', session);
     }
 
     const sessionPickCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
         const session = getSessionById(sessionId);
+        //proxyed session
         session?.pickCard(socket.id, cardId);
-        io.to(sessionId).emit('session:updated', session);
+        // io.to(sessionId).emit('session:updated', session);
     }
 
     const sessionVoteCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
         const session = getSessionById(sessionId);
+        //proxyed session
         session?.voteCard(cardId);
-        io.to(sessionId).emit('session:updated', session);
+        // io.to(sessionId).emit('session:updated', session);
     }
     socket.on('session:create', createSession);
     socket.on('session:getList', getSessionList);

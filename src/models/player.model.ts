@@ -34,4 +34,11 @@ export default class Player {
     public addCard(card: Card) {
         this._cards.push(card);
     }
+    public addCards(cards: Array<Card>) {
+        this._cards.push(...cards);
+    }
+
+    public incrementScore() {
+        this.score++;
+    }
 }

@@ -3,6 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import Game from './game.model';
 import Settings from './settings.model';
 import RoundCard from './roundCard.model';
+import { RoundStatusEnum } from '../enums/roundStatusEnum';
+import { findMaxVoteCards } from '../utils/arrayHelper';
+
 export default class Session {
     id: string;
     name: string;
@@ -33,6 +36,7 @@ export default class Session {
     }
     public moveRoundCardsToPlayed() {
         this.game.playedCardsList.push(...this.game.roundCards);
+        this.game.roundCards = [];
     }
 
     public incrementRound() {
@@ -40,9 +44,10 @@ export default class Session {
     }
 
     public dealCards() {
-        this.players.forEach((player) => {
-            const playerCards = this.game.cardsList.splice(0, 6);
-            player.updateCards(playerCards);
+        this.players.forEach((player: Player) => {
+            const cardsNumToAdd = 6 - player._cards.length
+            const playerCards = this.game.cardsList.splice(0, cardsNumToAdd);
+            player.addCards(playerCards);
         });
     }
 
@@ -69,6 +74,20 @@ export default class Session {
         const card = this.game.roundCards.find((card: RoundCard) => card.id === cardId);
         card?.vote();
     }
+
+    public updateRoundStatus(status: RoundStatusEnum) {
+        this.game.roundStatus = status;
+    }
+    public calcRoundScore() {
+        const maxVoteCards = findMaxVoteCards(this.game.roundCards);
+        maxVoteCards.forEach((maxVoteCard: RoundCard) => {
+            const player = this.getPlayerById(maxVoteCard.playerId);
+            player?.incrementScore();
+        });
+    }
+    // public startRound() {
+
+    // }
 
     public start() {
         //перемешать карты вопросов
