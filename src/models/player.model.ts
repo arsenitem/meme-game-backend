@@ -6,12 +6,17 @@ export default class Player {
     currentSessionId: string;
     score: number;
     _cards: Array<Card>;
+    pickedCard: boolean;
+    voted: boolean;
+
     constructor(name: string, id: string) {
         this.id = id;
         this.name = name;
         this.score = 0;
         this._cards = [];
         this.currentSessionId = '';
+        this.pickedCard = false;
+        this.voted = false;
     }
 
     public updateSessionId(id: string) {
@@ -40,5 +45,12 @@ export default class Player {
 
     public incrementScore() {
         this.score++;
+    }
+
+    public updatePickedCard(picked: boolean) {
+        this.pickedCard = picked
+    }
+    public updateVoted(voted: boolean) {
+        this.voted = voted
     }
 }

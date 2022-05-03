@@ -5,20 +5,21 @@ import Settings from "../models/settings.model";
 import GameService from "../services/gameService";
 import { Server } from "socket.io";
 import { addProxySet } from "../utils/proxy";
-import { throttle } from "lodash";
+import { throttle, debounce } from "lodash";
 export default (io: Server, socket: any) => {
     const gameService = new GameService(io);
-    const createSession = ({name}: {name: string}) => {
+    const createSession = async ({name}: {name: string}) => {
         const host = getPlayerById(socket.id)
         if (host) {
             const game = new Game();
             const settings = new Settings();
             const session = new Session(name, host, settings, game);
-            const throttledUpdate = throttle(() => {
-                io.to(session.id).emit('session:status', session);
-            }, 100);
-            const sessionProxy = addProxySet(session, throttledUpdate);
-            addSession(sessionProxy);
+            // const throttledUpdate = debounce(() => {
+            //     console.log('status upd');
+            //     io.to(session.id).emit('session:status', session);
+            // }, 100);
+            // const sessionProxy = addProxySet(session, throttledUpdate);
+            addSession(session);
             addPlayerToSession(socket.id, session.id);
             socket.join(session.id);
             socket.emit("session:created", session);
@@ -26,24 +27,24 @@ export default (io: Server, socket: any) => {
         }
     }
 
-    const getSessionList = () => {
+    const getSessionList = async () => {
         socket.emit("session:list", getActiveSession());
     }
 
-    const sessionStart = ({sessionId}: {sessionId: string}) => {
+    const sessionStart = async ({sessionId}: {sessionId: string}) => {
         gameService.startSession(sessionId);      
     }
 
-    const getSessionStatus = ({sessionId}: {sessionId: string}) => {
+    const getSessionStatus = async ({sessionId}: {sessionId: string}) => {
         gameService.getSessionStatus(sessionId);
     }
 
-    const sessionPickCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
+    const sessionPickCard = async ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
         gameService.playerPickCard(sessionId, cardId, socket.id);
     }
 
-    const sessionVoteCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
-        gameService.playerVoteCard(sessionId, cardId);
+    const sessionVoteCard = async ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
+        gameService.playerVoteCard(sessionId, cardId, socket.id);
     }
     socket.on('session:create', createSession);
     socket.on('session:getList', getSessionList);

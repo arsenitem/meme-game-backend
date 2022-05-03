@@ -2,10 +2,10 @@ import Session from "../models/session.model";
 import { getSessionById } from "./dataService";
 import { Server } from "socket.io";
 import { RoundStatusEnum } from '../enums/roundStatusEnum';
-import { watchProp } from "../utils/proxy";
+import { addProxySet } from "../utils/proxy";
+import Player from "../models/player.model";
 export default class GameService {
     io: Server;
-
     constructor(io: Server) {
         this.io = io;
     }
@@ -13,11 +13,13 @@ export default class GameService {
     playerPickCard = (sessionId: string, cardId: string, playerId: string) => {
         const session = getSessionById(sessionId);
         session?.pickCard(playerId, cardId);
+        this.io.to(sessionId).emit('session:status', session);
     }
 
-    playerVoteCard = (sessionId: string, cardId: string) => {
+    playerVoteCard = (sessionId: string, cardId: string, playerId: string) => {
         const session = getSessionById(sessionId);
-        session?.voteCard(cardId);
+        session?.voteCard(playerId, cardId);
+        this.io.to(sessionId).emit('session:status', session);
     }
 
     getSessionStatus = (sessionId: string) => {
@@ -25,14 +27,39 @@ export default class GameService {
         this.io.to(sessionId).emit('session:status', session);
     }
 
-    waitSeconds = async(seconds: number) => {    
+    waitSeconds = async(seconds: number) => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                resolve('timedout');
-            }, seconds * 1000)
+                resolve(true);
+            }, seconds * 1000);
         })
     }
-
+    waitSecondsOrCardsPick = (seconds: number, session: Session) => {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                resolve(true);
+            }, seconds * 1000);
+            session.game = addProxySet(session.game, () => {
+                if (session.game.roundCards.length === session.players.length) {
+                    clearTimeout(timeout);
+                    resolve(true);
+                }        
+            }, 'roundCards');
+        })   
+    }
+    waitSecondsOrVote = (seconds: number, session: Session) => {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                resolve(true);
+            }, seconds * 1000);
+            session.game = addProxySet(session.game, () => {
+                if (session.game.playersVoted.length === session.players.length) {
+                    clearTimeout(timeout);
+                    resolve(true);
+                }        
+            }, 'playersVoted');
+        })   
+    }
     startSession = async (sessionId: string) => {
         const session = getSessionById(sessionId);
         this.io.to(sessionId).emit('session:started');
@@ -50,15 +77,25 @@ export default class GameService {
                 session.incrementRound();
                 session.provideRoundQuesion();
                 session.dealCards();
+                this.io.to(session.id).emit('session:status', session);
                 session.updateRoundStatus(RoundStatusEnum.picking);
-                await this.waitSeconds(session.settings.roundTime);
+                this.io.to(session.id).emit('session:status', session);
+                await this.waitSecondsOrCardsPick(30, session);
+                session.pickRandomCardPlayers();
                 session.updateRoundStatus(RoundStatusEnum.voting);
-                await this.waitSeconds(session.settings.voteTime);
+                this.io.to(session.id).emit('session:status', session);
+                await this.waitSecondsOrVote(30, session);
+                session.voteRandomCardPlayers();
+                this.io.to(session.id).emit('session:status', session);
                 session.calcRoundScore()
+                this.io.to(session.id).emit('session:status', session);
                 session.updateRoundStatus(RoundStatusEnum.beforeRound);
+                this.io.to(session.id).emit('session:status', session);
                 console.log('voting end')
-                await this.waitSeconds(15);
-                session.moveRoundCardsToPlayed();
+                await this.waitSeconds(3);
+                session.endRound();
+                this.io.to(session.id).emit('session:status', session);
+                console.log('round end')
                 resolve(true); 
             }
         })

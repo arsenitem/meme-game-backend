@@ -5,6 +5,7 @@ import Settings from './settings.model';
 import RoundCard from './roundCard.model';
 import { RoundStatusEnum } from '../enums/roundStatusEnum';
 import { findMaxVoteCards } from '../utils/arrayHelper';
+import { sample } from 'lodash';
 
 export default class Session {
     id: string;
@@ -34,10 +35,6 @@ export default class Session {
     public removePlayer(playerRemove: Player) {
         this.players = this.players.filter((player) => player.id !== playerRemove.id);
     }
-    public moveRoundCardsToPlayed() {
-        this.game.playedCardsList.push(...this.game.roundCards);
-        this.game.roundCards = [];
-    }
 
     public incrementRound() {
         this.game.round++;
@@ -62,21 +59,50 @@ export default class Session {
     }
 
     public pickCard(playerId: string, cardId: string) {
-        const player = this.getPlayerById(playerId);
-        const card = player?.getCardById(cardId);
-        player?.removeCardById(cardId)
-        if (card) {
-            this.game.roundCards.push(new RoundCard(card.id, card.link, playerId));
-        }
+        if (this.game.roundStatus === RoundStatusEnum.picking) {
+            const player = this.getPlayerById(playerId);
+            const card = player?.getCardById(cardId);
+            player?.removeCardById(cardId)
+            if (card) {
+                this.game.roundCards.push(new RoundCard(card.id, card.link, playerId));
+                player?.updatePickedCard(true);
+            }
+        } 
     }
 
-    public voteCard(cardId: string) {
-        const card = this.game.roundCards.find((card: RoundCard) => card.id === cardId);
-        card?.vote();
+    public voteCard(playerId: string, cardId: string) {
+        if (this.game.roundStatus === RoundStatusEnum.voting) {
+            const card = this.game.roundCards.find((card: RoundCard) => card.id === cardId);
+            const player = this.getPlayerById(playerId);
+            card?.vote();
+            player?.updateVoted(true);
+            if (player) {
+                this.game.playersVoted.push(player);
+            }   
+        }
     }
 
     public updateRoundStatus(status: RoundStatusEnum) {
         this.game.roundStatus = status;
+    }
+
+    public pickRandomCardPlayers() {
+        const notPicked = this.players.filter((player: Player) => !player.pickedCard);
+        notPicked.forEach((player: Player) => {
+            const randomCardToPick = sample(player._cards)
+            if (randomCardToPick) {
+                this.pickCard(player.id, randomCardToPick.id);
+            } 
+        })
+    }
+    public voteRandomCardPlayers() {
+        const notVoted = this.players.filter((player: Player) => !player.voted);
+        notVoted.forEach((player: Player) => {
+            const randomCardToVote = sample(this.game.roundCards);
+            if (randomCardToVote) {
+                this.voteCard(player.id, randomCardToVote.id);
+            } 
+        })
     }
     public calcRoundScore() {
         const maxVoteCards = findMaxVoteCards(this.game.roundCards);
@@ -85,26 +111,18 @@ export default class Session {
             player?.incrementScore();
         });
     }
-    // public startRound() {
 
-    // }
+    public endRound() {
+        this.game.playedCardsList.push(...this.game.roundCards);
+        this.game.roundCards = [];
+        this.game.playersVoted = [];
+        this.players.forEach((player: Player) => {
+            player.updatePickedCard(false);
+            player.updateVoted(false);
+        })
+    }
 
-    public start() {
-        //перемешать карты вопросов
-        //перемешать карты мемов
-        //инкремент номера раунда
-        //раздать карты удалив из колоды
-        //запустить вопрос удалив из колоды
-        //запустить таймер
-        //голосование
-        //выбор самой смешной карточки
-        //начисление очков владельцу карточки
-        //раздать еще карты
-        //повторить
-        
-        // this.players.forEach((player) => {
-        //     player.updateCards();
-
-        // })
+    public isAllVoted() {
+        return this.players.every((player: Player) => player.voted);
     }
 }

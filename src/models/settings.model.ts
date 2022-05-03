@@ -5,7 +5,7 @@ export default class Settings {
     voteTime: number;
     password?: string;
 
-    constructor(maxPlayers: number = 6, maxRounds: number = 15, roundTime: number = 60, voteTime: number = 30, password?: string) {
+    constructor(maxPlayers: number = 6, maxRounds: number = 15, roundTime: number = 60, voteTime: number = 10, password?: string) {
         this.maxPlayers = maxPlayers;
         this.maxRounds = maxRounds;
         this.roundTime = roundTime;
