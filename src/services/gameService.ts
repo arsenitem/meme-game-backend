@@ -27,18 +27,18 @@ export default class GameService {
         this.io.to(sessionId).emit('session:status', session);
     }
 
-    waitSeconds = async(seconds: number) => {
+    waitBeforeNext = async(session: Session) => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve(true);
-            }, seconds * 1000);
+            }, session.settings.beforeNextRoundTime * 1000);
         })
     }
-    waitSecondsOrCardsPick = (seconds: number, session: Session) => {
+    waitSecondsOrCardsPick = (session: Session) => {
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 resolve(true);
-            }, seconds * 1000);
+            }, session.settings.roundTime * 1000);
             session.game = addProxySet(session.game, () => {
                 if (session.game.roundCards.length === session.players.length) {
                     clearTimeout(timeout);
@@ -47,11 +47,11 @@ export default class GameService {
             }, 'roundCards');
         })   
     }
-    waitSecondsOrVote = (seconds: number, session: Session) => {
+    waitSecondsOrVote = (session: Session) => {
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 resolve(true);
-            }, seconds * 1000);
+            }, session.settings.voteTime * 1000);
             session.game = addProxySet(session.game, () => {
                 if (session.game.playersVoted.length === session.players.length) {
                     clearTimeout(timeout);
@@ -80,11 +80,11 @@ export default class GameService {
                 this.io.to(session.id).emit('session:status', session);
                 session.updateRoundStatus(RoundStatusEnum.picking);
                 this.io.to(session.id).emit('session:status', session);
-                await this.waitSecondsOrCardsPick(30, session);
+                await this.waitSecondsOrCardsPick(session);
                 session.pickRandomCardPlayers();
                 session.updateRoundStatus(RoundStatusEnum.voting);
                 this.io.to(session.id).emit('session:status', session);
-                await this.waitSecondsOrVote(30, session);
+                await this.waitSecondsOrVote(session);
                 session.voteRandomCardPlayers();
                 this.io.to(session.id).emit('session:status', session);
                 session.calcRoundScore()
@@ -92,7 +92,7 @@ export default class GameService {
                 session.updateRoundStatus(RoundStatusEnum.beforeRound);
                 this.io.to(session.id).emit('session:status', session);
                 console.log('voting end')
-                await this.waitSeconds(3);
+                await this.waitBeforeNext(session);
                 session.endRound();
                 this.io.to(session.id).emit('session:status', session);
                 console.log('round end')
