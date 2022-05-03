@@ -2,9 +2,6 @@ import Session from "../models/session.model";
 import { getSessionById } from "./dataService";
 import { Server } from "socket.io";
 import { RoundStatusEnum } from '../enums/roundStatusEnum';
-import { addProxySet } from "../utils/proxy";
-import Player from "../models/player.model";
-import { once } from "lodash";
 export default class GameService {
     io: Server;
     addedProxyPick: boolean;
@@ -59,15 +56,6 @@ export default class GameService {
             const timeout = setTimeout(() => {
                 resolve(true);
             }, session.settings.roundTime * 1000);
-            // if (!this.addedProxyPick) {
-            //     session.game = addProxySet(session.game, () => {
-            //         if (session.game.roundCards.length === session.players.length) {
-            //             clearTimeout(timeout);
-            //             resolve(true);
-            //         }        
-            //     }, 'roundCards');
-            //     this.addedProxyPick = true;
-            // }
         })   
     }
     waitSecondsOrVote = async (session: Session) => {
@@ -75,17 +63,7 @@ export default class GameService {
             this.resolveFunc = resolve;
             const timeout = setTimeout(() => {
                 resolve(true);
-            }, session.settings.voteTime * 1000);
-            // if (!this.addedProxyVote) {
-            //     session.game = addProxySet(session.game, () => {
-            //         if (session.game.playersVoted.length === session.players.length) {
-            //             clearTimeout(timeout);
-            //             resolve(true);
-            //         }        
-            //     }, 'playersVoted');
-            //     console.log('added proxy')
-            //     this.addedProxyVote = true;
-            // }    
+            }, session.settings.voteTime * 1000);  
         })   
     }
     startSession = async (sessionId: string) => {
@@ -103,18 +81,13 @@ export default class GameService {
     newRound = async (session: Session) => {
         return new Promise(async (resolve) => {
             if (session) {
-                console.log('starting new round');
                 session.incrementRound();
                 session.provideRoundQuesion();
                 session.dealCards();
-                console.log('status will be emited');
                 this.io.to(session.id).emit('session:status', session);
-                console.log('status emited');
                 session.updateRoundStatus(RoundStatusEnum.picking);
-                console.log('picking');
                 this.io.to(session.id).emit('session:status', session);
                 await this.waitSecondsOrCardsPick(session);
-                console.log('cards picked');
                 session.pickRandomCardPlayers();
                 session.updateRoundStatus(RoundStatusEnum.voting);
                 this.io.to(session.id).emit('session:status', session);
@@ -122,14 +95,11 @@ export default class GameService {
                 session.voteRandomCardPlayers();
                 this.io.to(session.id).emit('session:status', session);
                 session.calcRoundScore()
-                this.io.to(session.id).emit('session:status', session);
                 session.updateRoundStatus(RoundStatusEnum.beforeRound);
                 this.io.to(session.id).emit('session:status', session);
-                console.log('voting end')
                 await this.waitBeforeNext(session);
                 session.endRound();
                 this.io.to(session.id).emit('session:status', session);
-                console.log('round end')
                 resolve(true); 
             }
         })
