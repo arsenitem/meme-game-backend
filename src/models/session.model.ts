@@ -62,8 +62,8 @@ export default class Session {
         if (this.game.roundStatus === RoundStatusEnum.picking) {
             const player = this.getPlayerById(playerId);
             const card = player?.getCardById(cardId);
-            player?.removeCardById(cardId)
-            if (card) {
+            if (card && !player?.pickedCard) {
+                player?.removeCardById(cardId)
                 this.game.roundCards.push(new RoundCard(card.id, card.link, playerId));
                 player?.updatePickedCard(true);
             }
@@ -74,11 +74,13 @@ export default class Session {
         if (this.game.roundStatus === RoundStatusEnum.voting) {
             const card = this.game.roundCards.find((card: RoundCard) => card.id === cardId);
             const player = this.getPlayerById(playerId);
-            card?.vote();
-            player?.updateVoted(true);
-            if (player) {
-                this.game.playersVoted.push(player);
-            }   
+            if (!player?.voted) {
+                card?.vote();
+                player?.updateVoted(true);
+                if (player) {
+                    this.game.playersVoted.push(player);
+                }  
+            }      
         }
     }
 

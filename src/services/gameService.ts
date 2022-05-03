@@ -34,7 +34,7 @@ export default class GameService {
             }, session.settings.beforeNextRoundTime * 1000);
         })
     }
-    waitSecondsOrCardsPick = (session: Session) => {
+    waitSecondsOrCardsPick = async (session: Session) => {
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 resolve(true);
@@ -47,7 +47,7 @@ export default class GameService {
             }, 'roundCards');
         })   
     }
-    waitSecondsOrVote = (session: Session) => {
+    waitSecondsOrVote = async (session: Session) => {
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 resolve(true);
