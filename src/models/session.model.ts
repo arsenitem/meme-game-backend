@@ -5,7 +5,7 @@ import Settings from './settings.model';
 import RoundCard from './roundCard.model';
 import { RoundStatusEnum } from '../enums/roundStatusEnum';
 import { findMaxVoteCards } from '../utils/arrayHelper';
-import { sample } from 'lodash';
+import { sample, shuffle } from 'lodash';
 
 export default class Session {
     id: string;
@@ -54,8 +54,8 @@ export default class Session {
 
     public shuffleCards() {
         //TODO Edit sorting algorithm
-        this.game.questionsList = this.game.questionsList.sort(() => 0.5 - Math.random());
-        this.game.cardsList = this.game.cardsList.sort(() => 0.5 - Math.random());
+        this.game.questionsList = shuffle(this.game.questionsList);
+        this.game.cardsList = shuffle(this.game.cardsList);
     }
 
     public pickCard(playerId: string, cardId: string) {
