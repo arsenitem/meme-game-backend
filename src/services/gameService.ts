@@ -4,22 +4,40 @@ import { Server } from "socket.io";
 import { RoundStatusEnum } from '../enums/roundStatusEnum';
 import { addProxySet } from "../utils/proxy";
 import Player from "../models/player.model";
+import { once } from "lodash";
 export default class GameService {
     io: Server;
+    addedProxyPick: boolean;
+    addedProxyVote: boolean;
+    resolveFunc: Function | null;
     constructor(io: Server) {
         this.io = io;
+        this.addedProxyPick = false;
+        this.addedProxyVote = false;
+        this.resolveFunc = null;
     }
 
     playerPickCard = (sessionId: string, cardId: string, playerId: string) => {
         const session = getSessionById(sessionId);
         session?.pickCard(playerId, cardId);
         this.io.to(sessionId).emit('session:status', session);
+        if (session?.game.roundCards.length === session?.players.length) {
+            console.log('evet')
+            if (this.resolveFunc) {
+                this.resolveFunc();
+            }
+        }
     }
 
     playerVoteCard = (sessionId: string, cardId: string, playerId: string) => {
         const session = getSessionById(sessionId);
         session?.voteCard(playerId, cardId);
         this.io.to(sessionId).emit('session:status', session);
+        if (session?.game.playersVoted.length === session?.players.length) {
+            if (this.resolveFunc) {
+                this.resolveFunc();
+            }
+        }
     }
 
     getSessionStatus = (sessionId: string) => {
@@ -34,30 +52,40 @@ export default class GameService {
             }, session.settings.beforeNextRoundTime * 1000);
         })
     }
+    
     waitSecondsOrCardsPick = async (session: Session) => {
         return new Promise((resolve, reject) => {
+            this.resolveFunc = resolve;
             const timeout = setTimeout(() => {
                 resolve(true);
             }, session.settings.roundTime * 1000);
-            session.game = addProxySet(session.game, () => {
-                if (session.game.roundCards.length === session.players.length) {
-                    clearTimeout(timeout);
-                    resolve(true);
-                }        
-            }, 'roundCards');
+            // if (!this.addedProxyPick) {
+            //     session.game = addProxySet(session.game, () => {
+            //         if (session.game.roundCards.length === session.players.length) {
+            //             clearTimeout(timeout);
+            //             resolve(true);
+            //         }        
+            //     }, 'roundCards');
+            //     this.addedProxyPick = true;
+            // }
         })   
     }
     waitSecondsOrVote = async (session: Session) => {
         return new Promise((resolve, reject) => {
+            this.resolveFunc = resolve;
             const timeout = setTimeout(() => {
                 resolve(true);
             }, session.settings.voteTime * 1000);
-            session.game = addProxySet(session.game, () => {
-                if (session.game.playersVoted.length === session.players.length) {
-                    clearTimeout(timeout);
-                    resolve(true);
-                }        
-            }, 'playersVoted');
+            // if (!this.addedProxyVote) {
+            //     session.game = addProxySet(session.game, () => {
+            //         if (session.game.playersVoted.length === session.players.length) {
+            //             clearTimeout(timeout);
+            //             resolve(true);
+            //         }        
+            //     }, 'playersVoted');
+            //     console.log('added proxy')
+            //     this.addedProxyVote = true;
+            // }    
         })   
     }
     startSession = async (sessionId: string) => {
@@ -67,6 +95,7 @@ export default class GameService {
             session.shuffleCards();
             while (session.game.round < session.settings.maxRounds) {
                 await this.newRound(session);
+                console.log(session.game.round);
             }
         }
     }
@@ -74,13 +103,18 @@ export default class GameService {
     newRound = async (session: Session) => {
         return new Promise(async (resolve) => {
             if (session) {
+                console.log('starting new round');
                 session.incrementRound();
                 session.provideRoundQuesion();
                 session.dealCards();
+                console.log('status will be emited');
                 this.io.to(session.id).emit('session:status', session);
+                console.log('status emited');
                 session.updateRoundStatus(RoundStatusEnum.picking);
+                console.log('picking');
                 this.io.to(session.id).emit('session:status', session);
                 await this.waitSecondsOrCardsPick(session);
+                console.log('cards picked');
                 session.pickRandomCardPlayers();
                 session.updateRoundStatus(RoundStatusEnum.voting);
                 this.io.to(session.id).emit('session:status', session);
