@@ -2,17 +2,23 @@ import Session from "../models/session.model";
 import {addSession, getPlayerById, addPlayerToSession, getSessionById, getActiveSession} from '../services/dataService';
 import Game from "../models/game.model";
 import Settings from "../models/settings.model";
-import startSession from "../services/gameService";
+import GameService from "../services/gameService";
 import { Server } from "socket.io";
 import { addProxySet } from "../utils/proxy";
+import { throttle } from "lodash";
 export default (io: Server, socket: any) => {
+    const gameService = new GameService(io);
     const createSession = ({name}: {name: string}) => {
         const host = getPlayerById(socket.id)
         if (host) {
             const game = new Game();
             const settings = new Settings();
             const session = new Session(name, host, settings, game);
-            addSession(session);
+            const throttledUpdate = throttle(() => {
+                io.to(session.id).emit('session:status', session);
+            }, 100);
+            const sessionProxy = addProxySet(session, throttledUpdate);
+            addSession(sessionProxy);
             addPlayerToSession(socket.id, session.id);
             socket.join(session.id);
             socket.emit("session:created", session);
@@ -25,27 +31,19 @@ export default (io: Server, socket: any) => {
     }
 
     const sessionStart = ({sessionId}: {sessionId: string}) => {
-        startSession(io, sessionId);
-        io.to(sessionId).emit('session:started');        
+        gameService.startSession(sessionId);      
     }
 
     const getSessionStatus = ({sessionId}: {sessionId: string}) => {
-        const session = getSessionById(sessionId);
-        io.to(sessionId).emit('session:status', session);
+        gameService.getSessionStatus(sessionId);
     }
 
     const sessionPickCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
-        const session = getSessionById(sessionId);
-        //proxyed session
-        session?.pickCard(socket.id, cardId);
-        // io.to(sessionId).emit('session:updated', session);
+        gameService.playerPickCard(sessionId, cardId, socket.id);
     }
 
     const sessionVoteCard = ({sessionId, cardId}: {sessionId: string, cardId: string}) => {
-        const session = getSessionById(sessionId);
-        //proxyed session
-        session?.voteCard(cardId);
-        // io.to(sessionId).emit('session:updated', session);
+        gameService.playerVoteCard(sessionId, cardId);
     }
     socket.on('session:create', createSession);
     socket.on('session:getList', getSessionList);
