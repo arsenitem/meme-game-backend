@@ -21,9 +21,9 @@ const addPlayer = (player: Player) => {
 }
 const addPlayerToSession = (playerId: string, sessionId: string) => {
     const player = getPlayerById(playerId);
-    
     const session = getSessionById(sessionId);
     if (player && session) {
+        player.resetData();
         session.addPlayer(player);
         player.updateSessionId(session.id);
     }

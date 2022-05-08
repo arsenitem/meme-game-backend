@@ -53,4 +53,12 @@ export default class Player {
     public updateVoted(voted: boolean) {
         this.voted = voted
     }
+
+    public resetData() {
+        this.score = 0;
+        this._cards = [];
+        this.currentSessionId = '';
+        this.pickedCard = false;
+        this.voted = false;
+    }
 }
