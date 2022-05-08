@@ -78,11 +78,17 @@ export default class GameService {
         }
     }
 
+    joinSession = async (sessionId: string) => {
+        const session = getSessionById(sessionId);
+        this.io.to(sessionId).emit('session:joined');
+        
+    }
+
     newRound = async (session: Session) => {
         return new Promise(async (resolve) => {
             if (session) {
                 session.incrementRound();
-                session.provideRoundQuesion();
+                session.provideRoundQuestion();
                 session.dealCards();
                 this.io.to(session.id).emit('session:status', session);
                 session.updateRoundStatus(RoundStatusEnum.picking);

@@ -49,7 +49,7 @@ export default class Session {
         });
     }
 
-    public provideRoundQuesion() {
+    public provideRoundQuestion() {
         this.game.activeQuestion = this.game.questionsList.pop() || null;
     }
 

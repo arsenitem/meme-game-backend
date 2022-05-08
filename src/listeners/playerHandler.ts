@@ -1,5 +1,5 @@
 import Player from "../models/player.model"
-import { addPlayer, addPlayerToSession,removePlayerFromSession, removePlayerById, getSessionById } from "../services/dataService";
+import { addPlayer, addPlayerToSession,removePlayerFromSession, removePlayerById, getSessionById, getPlayerById } from "../services/dataService";
 export default (io: any, socket: any) => {
     const createPlayer = async ({name}: {name: string}) => {
         const player = new Player(name, socket.id as string);
@@ -7,6 +7,10 @@ export default (io: any, socket: any) => {
         socket.emit('player:created', player);
     }
     const joinSession = async ({sessionId} : {sessionId: string}) => { 
+        const player = getPlayerById(socket.id) 
+        if (typeof player?.currentSessionId !== "undefined") {
+            removePlayerFromSession(socket.id, player.currentSessionId);
+        }
         addPlayerToSession(socket.id, sessionId);
         socket.join(sessionId);
     }
