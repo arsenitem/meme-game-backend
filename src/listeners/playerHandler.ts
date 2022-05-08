@@ -1,6 +1,8 @@
 import Player from "../models/player.model"
-import { addPlayer, addPlayerToSession,removePlayerFromSession, removePlayerById, getSessionById } from "../services/dataService";
+import { addPlayer, addPlayerToSession,removePlayerFromSession, removePlayerById, getSessionById, getPlayerSessionId } from "../services/dataService";
+import GameService from "../services/gameService";
 export default (io: any, socket: any) => {
+    const gameService = new GameService(io);
     const createPlayer = async ({name}: {name: string}) => {
         const player = new Player(name, socket.id as string);
         addPlayer(player);
@@ -13,21 +15,21 @@ export default (io: any, socket: any) => {
     const leaveSession = async ({sessionId} : {sessionId: string}) => {
         removePlayerFromSession(socket.id, sessionId);
         socket.leave(sessionId);
+        gameService.sessionNotEmpty(sessionId);
     }
 
     const disconnectPlayer = async () => {
         console.log(socket.id, 'disconnected');
+        const sessionId = getPlayerSessionId(socket.id);
         removePlayerById(socket.id);
-    }
-
-    const disconnectSession = async ({sessionId}: {sessionId: string}) => {
-        removePlayerFromSession(socket.id, sessionId);
+        if (sessionId) {
+            gameService.sessionNotEmpty(sessionId);
+        }
     }
 
     socket.on('player:create', createPlayer);
     socket.on('player:join', joinSession);
     socket.on('player:leave', leaveSession);
-    socket.on('player:disconnect', disconnectSession);
 
     socket.on('disconnect', disconnectPlayer)
 }

@@ -53,7 +53,6 @@ export default class Session {
     }
 
     public shuffleCards() {
-        //TODO Edit sorting algorithm
         this.game.questionsList = shuffle(this.game.questionsList);
         this.game.cardsList = shuffle(this.game.cardsList);
     }

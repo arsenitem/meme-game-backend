@@ -10,7 +10,9 @@ import Card from "../models/card.model";
 const getSessionById = (id: string) => {
     return data.activeSessions.find((session) => session.id === id);
 }
-
+const removeSession = (sessionId: string) => {
+    data.activeSessions = data.activeSessions.filter((session: Session) => session.id !== sessionId);
+}
 const addSession = (session: Session) => {
     data.activeSessions.push(session);
 }
@@ -76,6 +78,11 @@ const getActiveSession = () => {
     return data.activeSessions;
 }
 
+const getPlayerSessionId = (playerId: string) => {
+    const player = getPlayerById(playerId);
+    return player?.currentSessionId;
+}
+
 export {
     getSessionById,
     addSession,
@@ -88,4 +95,6 @@ export {
     setupData,
     getCards,
     getActiveSession,
+    removeSession,
+    getPlayerSessionId
 }
