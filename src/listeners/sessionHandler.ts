@@ -35,6 +35,10 @@ export default (io: Server, socket: any) => {
         gameService.startSession(sessionId);      
     }
 
+    const sessionJoin = async ({sessionId}: {sessionId: string}) => {
+        gameService.joinSession(sessionId);      
+    }
+
     const getSessionStatus = async ({sessionId}: {sessionId: string}) => {
         gameService.getSessionStatus(sessionId);
     }
@@ -51,6 +55,7 @@ export default (io: Server, socket: any) => {
     socket.on('session:getStatus', getSessionStatus);
 
     socket.on('session:start', sessionStart);
+    socket.on('session:join', sessionJoin);
     socket.on('session:pickCard', sessionPickCard);
     socket.on('session:voteCard', sessionVoteCard);
 }
