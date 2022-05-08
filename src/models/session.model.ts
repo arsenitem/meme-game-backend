@@ -43,6 +43,7 @@ export default class Session {
     public dealCards() {
         this.players.forEach((player: Player) => {
             const cardsNumToAdd = 6 - player._cards.length
+            this.game.cardsList = shuffle(this.game.cardsList);
             const playerCards = this.game.cardsList.splice(0, cardsNumToAdd);
             player.addCards(playerCards);
         });
