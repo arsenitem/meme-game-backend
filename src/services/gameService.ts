@@ -2,6 +2,7 @@ import Session from "../models/session.model";
 import { getSessionById, removeSession } from "./dataService";
 import { Server } from "socket.io";
 import { RoundStatusEnum } from '../enums/roundStatusEnum';
+import logger from "../utils/logger";
 export default class GameService {
     io: Server;
     addedProxyPick: boolean;
@@ -19,10 +20,9 @@ export default class GameService {
     playerPickCard = (sessionId: string, cardId: string, playerId: string) => {
         const session = getSessionById(sessionId);
         session?.pickCard(playerId, cardId);
+        logger.info(`Session ${sessionId}: player ${playerId} picked ${cardId} card`);  
         this.io.to(sessionId).emit('session:status', session);
-        console.log(this.resolver);
         if (session?.game.roundCards.length === session?.players.length) {
-            console.log('evet')
             if (this.resolver) {
                 console.log('resolve pick exists')
                 this.resolver();
@@ -34,6 +34,7 @@ export default class GameService {
     playerVoteCard = (sessionId: string, cardId: string, playerId: string) => {
         const session = getSessionById(sessionId);
         session?.voteCard(playerId, cardId);
+        logger.info(`Session ${sessionId}: player ${playerId} voted ${cardId} card`);  
         this.io.to(sessionId).emit('session:status', session);
         if (session?.game.playersVoted.length === session?.players.length) {
             if (this.resolver) {
@@ -46,6 +47,7 @@ export default class GameService {
     getSessionStatus = (sessionId: string) => {
         const session = getSessionById(sessionId);
         this.io.to(sessionId).emit('session:status', session);
+        logger.info(`Session ${sessionId} sent status`);  
     }
 
     waitTime = async (time:number) => {
@@ -60,11 +62,11 @@ export default class GameService {
     startSession = async (sessionId: string) => {
         const session = getSessionById(sessionId);
         this.io.to(sessionId).emit('session:started');
+        logger.info(`Session ${sessionId} started`);  
         if (session) {
             session.shuffleCards();
             while (session.game.round < session.settings.maxRounds) {
                 await this.newRound(session);
-                console.log(session.game.round);
             }
         }
     }
@@ -73,6 +75,7 @@ export default class GameService {
         if (session?.players.length === 0) {
             session.game.round = 100;
             removeSession(sessionId);
+            logger.info(`Session ${sessionId} deleted (0 players)`);  
         }
     }
 
@@ -99,6 +102,7 @@ export default class GameService {
                 await this.waitTime(session.settings.beforeNextRoundTime);
                 session.endRound();
                 this.io.to(session.id).emit('session:status', session);
+                logger.info(`Session ${session.id} round ${session.game.round} ended`);  
                 resolve(true); 
             }
         })
